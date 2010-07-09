@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Twitter Importer
-Plugin URI: http://bradt.ca/projects/wordpress/twitter-importer/
+Plugin URI: http://wordpress.org/extend/plugins/twitter-importer/
 Description: Based on the RSS Importer, the Twitter importer pages through your RSS feeds from Twitter and imports each post into the category you choose.
 Author: Brad Touesnard
 Version: 0.1
