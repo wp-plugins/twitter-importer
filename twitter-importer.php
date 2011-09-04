@@ -2,9 +2,9 @@
 /*
 Plugin Name: Twitter Importer
 Plugin URI: http://wordpress.org/extend/plugins/twitter-importer/
-Description: Based on the RSS Importer, the Twitter importer pages through your RSS feeds from Twitter and imports each post into the category you choose.
+Description: Based on the RSS Importer, the Twitter importer pages through Twitter's RSS feeds of your tweets and imports each tweet as a post. You can import as Wordpress' default post type or choose a custom post type you have setup.
 Author: Brad Touesnard
-Version: 0.1
+Version: 0.2
 Author URI: http://bradt.ca/
 */
 
@@ -24,7 +24,7 @@ class Twitter_Import {
 
 	var $posts = array ();
 	var $username;
-	var $category;
+	var $post_type;
 	var $author;
 
 	function header() {
@@ -46,28 +46,31 @@ class Twitter_Import {
 	function greet() {
 		?>
 		<div class="narrow">
-		<p><?php _e('Howdy! This importer allows you to import all your Twitter posts as Wordpress posts. Ideal if you\'re switching to using Twitter Tools.') ?></p>
+		<p><?php _e('Howdy! This importer allows you to import all your Twitter posts as Wordpress posts. Ideal if you\'re planning on using <a href="http://wordpress.org/extend/plugins/twitter-tools/">Twitter Tools</a>.') ?></p>
 		<form name="form1" method="post" action="admin.php?import=twitter&step=1">
 		<table class="form-table">
 		<tr valign="top">
-			<th scope="row"><label for="username"><?php _e('Twitter username') ?></label></th>
+			<th scope="row"><label for="username"><?php _e('Twitter Username') ?></label></th>
 			<td><input type="text" name="username" id="username" /></td>
 		</tr>
 		<tr valign="top">
-			<th scope="row"><label for="category"><?php _e('Category of imported posts') ?></label></th>
+			<th scope="row"><label for="post_type"><?php _e('Post Type') ?></label></th>
 			<td>
-				<select name="category" id="category">
+				<select name="post_type" id="post_type">
 				<?php
-				$categories = get_categories('hide_empty=0');
-				foreach ($categories as $cat) {
-					printf('<option value="%s">%s</option>', $cat->term_id, $cat->name);
+				$post_types = array_diff(get_post_types(), array('page', 'attachment', 'revision', 'nav_menu_item'));
+				foreach ($post_types as $key) {
+					$post_type = get_post_type_object($key);
+					printf('<option value="%s">%s</option>', $key, $post_type->labels->singular_name);
 				}
 				?>
 				</select>
+				<br />
+				<a href="<?php echo admin_url('/plugin-install.php?tab=search&type=term&s=custom+post+type'); ?>">You can create new custom post types with a plugin.</a>
 			</td>
 		</tr>
 		<tr valign="top">
-			<th scope="row"><label for="author"><?php _e('Author of imported posts') ?></label></th>
+			<th scope="row"><label for="author"><?php _e('Author') ?></label></th>
 			<td>
 				<select name="author" id="author">
 				<?php
@@ -126,7 +129,7 @@ class Twitter_Import {
 			$post_date_gmt = gmdate('Y-m-d H:i:s', $post_date_gmt);
 			$post_date = get_date_from_gmt( $post_date_gmt );
 
-			$post_category = array($this->category);
+			$post_type = $this->post_type;
 
 			preg_match('|<description>(.*?)</description>|is', $post, $post_content);
 			$post_content = $wpdb->escape($this->unhtmlentities(trim($post_content[1])));
@@ -141,7 +144,7 @@ class Twitter_Import {
 
 			$post_author = $this->author;
 			$post_status = 'publish';
-			$this->posts[$index] = compact('post_author', 'post_date', 'post_date_gmt', 'post_content', 'post_title', 'post_status', 'post_category', 'post_name');
+			$this->posts[$index] = compact('post_author', 'post_date', 'post_date_gmt', 'post_content', 'post_title', 'post_status', 'post_type', 'post_name');
 			$index++;
 		}
 	}
@@ -173,7 +176,7 @@ class Twitter_Import {
 
 	function import() {
 		$this->username = $_POST['username'];
-		$this->category = $_POST['category'];
+		$this->post_type = $_POST['post_type'];
 		$this->author = $_POST['author'];
 		
 		if(!function_exists('wp_remote_fopen')) {
@@ -190,7 +193,7 @@ class Twitter_Import {
 			$data = wp_remote_fopen($page_url);
 
 			$this->get_posts($data);
-		
+			
 			$result = $this->import_posts();
 			if ( is_wp_error( $result ) )
 				return $result;
