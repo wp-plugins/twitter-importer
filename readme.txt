@@ -4,8 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: twitter, importer, tweets
 Requires at least: 3.2
 Tested up to: 3.2
-Stable tag: 0.2
-Last Updated: 2011-09-04
+Stable tag: trunk
 
 Import all tweets from your Twitter timeline.
 
